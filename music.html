@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="gu">
+<head>
+  <meta charset="utf-8" />
+  <title>Do's & Don'ts - Drag & Drop with Music</title>
+  <style>
+    body { font-family: "Noto Sans Gujarati", sans-serif; text-align:center; background:#f0f8ff; }
+    .btn {
+      padding:10px 20px; font-size:18px; border:none; border-radius:8px;
+      background:darkblue; color:white; cursor:pointer; margin:10px;
+    }
+    .btn:hover { background:navy; }
+  </style>
+</head>
+<body>
+  <h2>🎵 Do's & Don'ts Quiz with Music</h2>
+
+  <button class="btn" onclick="startMusic()">▶ Start Music</button>
+  <button class="btn" onclick="stopMusic()">⏹ Stop Music</button>
+
+  <!-- Background Music (Pixabay – Royalty Free, works in browser) -->
+  <audio id="bgMusic" loop>
+    <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_5e5b22d6fb.mp3?filename=relaxing-music-11769.mp3" type="audio/mpeg">
+    તમારું browser audio support નથી કરતું.
+  </audio>
+
+  <script>
+    const music = document.getElementById("bgMusic");
+
+    function startMusic() {
+      music.volume = 0.3;   // ધીમું volume
+      music.play().catch(err => {
+        alert("⚠️ Music play error: " + err);
+      });
+    }
+
+    function stopMusic() {
+      music.pause();
+      music.currentTime = 0;
+    }
+  </script>
+</body>
+</html>
