@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="gu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Do's & Don'ts - Drag & Drop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    body{font-family:"Noto Sans Gujarati",sans-serif;background:#f7fbff;margin:0;padding:20px;}
+    .container{max-width:1000px;margin:auto;background:#fff;padding:20px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.1);}
+    h1{color:#0b4f8a;text-align:center;}
+    .meta{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:12px 0;}
+    .meta label{font-weight:600;}
+    input{padding:6px 10px;border-radius:6px;border:1px solid #ccc;}
+    .subject{text-align:center;font-weight:bold;margin:10px 0;}
+    .main{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:14px;}
+    .pool,.col{padding:12px;border-radius:10px;min-height:200px;}
+    .pool{border:2px dashed #cfe4ff;background:#fafcff;}
+    .col{border:2px solid #ccc;}
+    #dos{background:#e6ffe6;border-color:#9cd89c;}
+    #donts{background:#ffe6e6;border-color:#e0a5a5;}
+    .item{padding:10px;margin:8px 0;border-radius:8px;cursor:grab;font-size:14px;border:1px solid #ddd;transition:0.3s;}
+    .item:active{cursor:grabbing;}
+    .item:nth-child(1){background:#ffe5e5;}
+    .item:nth-child(2){background:#e5f0ff;}
+    .item:nth-child(3){background:#e8ffe5;}
+    .item:nth-child(4){background:#fff5e5;}
+    .item:nth-child(5){background:#f0e5ff;}
+    .item:nth-child(6){background:#e5fff9;}
+    .item:nth-child(7){background:#ffe5f7;}
+    .item:nth-child(8){background:#e5ffff;}
+    .item:nth-child(9){background:#f9ffe5;}
+    .item:nth-child(10){background:#e5f7ff;}
+    .controls{display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap;}
+    button{padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:bold;border:none;}
+    .btn-reset{background:#ddd;color:#333;}
+    .btn-check{background:#28a745;color:#fff;}
+    .btn-help{background:#dc3545;color:#fff;}
+    .btn-start{background:#007bff;color:#fff;}
+    .btn-stop{background:#6c757d;color:#fff;}
+    .correct{border:2px solid green !important;}
+    .wrong{border:2px solid red !important;}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Created By Sandip Prajapati<br>Primary School Radhavanaj — Ta. Matar, Dist. Kheda</h1>
+
+    <div class="meta">
+      <div>
+        <label>બાળકનું નામ :</label>
+        <input type="text" placeholder="તમારું નામ લખો">
+      </div>
+      <div>
+        <label>ધોરણ :</label>
+        <input type="text" placeholder="જેમ કે 5/6/7">
+      </div>
+    </div>
+
+    <div class="subject">વિષય : અંગ્રેજી</div>
+
+    <div class="main">
+      <div class="pool" id="pool">
+        <h2>Statements — drag from here</h2>
+        <div id="items">
+          <div class="item" draggable="true" data-id="1">1. Check condition of vehicle before starting a journey.</div>
+          <div class="item" draggable="true" data-id="2">2. Do not drive if unfit/sleepy and not drive continuously more then 2 hr.</div>
+          <div class="item" draggable="true" data-id="3">3. Do not exceed the capacity of a Vehicle & do not entertain the passengers.</div>
+          <div class="item" draggable="true" data-id="4">4. Always follow traffic rules of the site/road.</div>
+          <div class="item" draggable="true" data-id="5">5. Do not engage in road rage.</div>
+          <div class="item" draggable="true" data-id="6">6. Do not drive under influence of drugs or alcohol.</div>
+          <div class="item" draggable="true" data-id="7">7. Always plan your journey.</div>
+          <div class="item" draggable="true" data-id="8">8. Do not use cell phones while driving.</div>
+          <div class="item" draggable="true" data-id="9">9. Always wear seat belt/helmet.</div>
+          <div class="item" draggable="true" data-id="10">10. Be considerate to other road users.</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="col" id="dos"><h3>Do's</h3></div>
+        <div class="col" id="donts"><h3>Don'ts</h3></div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn-reset" onclick="resetItems()">Reset</button>
+      <button class="btn-check" onclick="checkItems()">Check</button>
+      <button class="btn-help" onclick="showHint()">Hint</button>
+      <button class="btn-start" onclick="startMusic()">▶ Start Music</button>
+      <button class="btn-stop" onclick="stopMusic()">⏹ Stop Music</button>
+    </div>
+  </div>
+
+  <!-- બેકગ્રાઉન્ડ મ્યુઝિક (Royalty-Free from Pixabay) -->
+  <audio id="bg-music" loop>
+    <source src="https://cdn.pixabay.com/download/audio/2023/03/30/audio_8b69a1d6b9.mp3?filename=serene-background-140997.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    let dragged = null;
+    const items = document.querySelectorAll('.item');
+    const pool = document.getElementById('pool');
+    const dos = document.getElementById('dos');
+    const donts = document.getElementById('donts');
+    const music = document.getElementById("bg-music");
+
+    items.forEach(item=>{
+      item.addEventListener('dragstart', ()=>{ dragged=item; });
+      item.addEventListener('dragend', ()=>{ dragged=null; });
+    });
+
+    [pool,dos,donts].forEach(zone=>{
+      zone.addEventListener('dragover', e=>e.preventDefault());
+      zone.addEventListener('drop', e=>{
+        e.preventDefault();
+        if(dragged) zone.appendChild(dragged);
+      });
+    });
+
+    function resetItems(){
+      const all = document.querySelectorAll('.item');
+      const list = document.getElementById('items');
+      all.forEach(i=>{
+        i.classList.remove("correct","wrong");
+        list.appendChild(i);
+      });
+    }
+
+    function checkItems(){
+      const dosIds = ["1","4","7","9","10"];
+      const dontIds = ["2","3","5","6","8"];
+      let score = 0;
+
+      document.querySelectorAll('.item').forEach(item=>{
+        item.classList.remove("correct","wrong");
+        let id=item.dataset.id;
+        if(dos.contains(item)){
+          if(dosIds.includes(id)){ item.classList.add("correct"); score++; }
+          else item.classList.add("wrong");
+        } else if(donts.contains(item)){
+          if(dontIds.includes(id)){ item.classList.add("correct"); score++; }
+          else item.classList.add("wrong");
+        }
+      });
+
+      alert("તમારો સ્કોર: " + score + " / 10");
+    }
+
+    function showHint(){
+      alert("Hint: Sentences starting with 'Do not...' go to Don'ts. Rest go to Do's.");
+    }
+
+    function startMusic(){
+      music.volume = 0.2; // ધીમું
+      music.play();
+    }
+
+    function stopMusic(){
+      music.pause();
+      music.currentTime = 0;
+    }
+  </script>
+</body>
+</html>
