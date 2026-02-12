@@ -1,1 +1,258 @@
-yes 
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>સ્માર્ટ વિદ્યાર્થી હાજરી બોર્ડ</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+body{ font-family: 'Segoe UI', sans-serif; background:#f0f7f4; margin:0; padding:20px; color: #2d3748; padding-bottom: 60px; }
+.header-section { text-align:center; margin-bottom: 20px; }
+h2{color:#0b6b3a; margin-bottom:5px;}
+
+.setup-container {
+    background: #fff; padding: 25px; border-radius: 12px;
+    max-width: 600px; margin: 0 auto 20px;
+    border: 2px dashed #0b6b3a; text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+.input-field {
+    width: 90%; padding: 10px; margin: 10px 0;
+    border: 1px solid #cbd5e0; border-radius: 6px; font-size: 14px;
+}
+.btn-sample { 
+    background: #3182ce; color: white; padding: 8px 15px; 
+    border-radius: 5px; text-decoration: none; display: inline-block;
+    margin-bottom: 15px; font-weight: bold;
+}
+.file-input-label {
+    display: block; margin-top: 15px; padding: 12px;
+    background: #e6fffa; border: 1px solid #38a169;
+    border-radius: 6px; cursor: pointer; font-weight: bold; color: #276749;
+}
+
+#card-container{ display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:15px; max-width: 1200px; margin: 0 auto; }
+.card-wrap { perspective:1000px; }
+.card { height:200px; position:relative; transform-style:preserve-3d; transition:transform 0.6s; cursor: pointer; }
+.card.flip { transform:rotateY(180deg); }
+.face { position:absolute; width:100%; height:100%; backface-visibility:hidden; border-radius:12px; display:flex; align-items:center; justify-content:center; text-align:center; padding:10px; box-sizing:border-box; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+.front { background:#0b6b3a; color:#fff; font-weight:bold; flex-direction:column; gap:8px; border: 2px solid #08522c; }
+.front button { border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:11px; width: 90%; font-weight: bold; }
+.btn-present { background:#2ecc71; color:#fff; }
+.btn-absent { background:#e74c3c; color:#fff; }
+.back { background:#fff; transform:rotateY(180deg); padding: 0; overflow: hidden; border: 2px solid #2ecc71; }
+.back img { width:100%; height:100%; object-fit:cover; }
+
+#summary-box { max-width: 1200px; margin: 20px auto; background:#fff; padding:15px; border-radius:12px; display:none; justify-content:space-around; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.05); font-size: 18px; }
+#lists-section { max-width: 1200px; margin: 20px auto; background:#fff; padding:20px; border-radius:12px; display: none; }
+ul { display: flex; flex-wrap: wrap; gap: 10px; list-style: none; padding: 0; }
+li { background: #edf2f7; padding: 5px 12px; border-radius: 20px; font-size: 14px; }
+.action-buttons { display:none; gap:15px; max-width: 500px; margin: 20px auto; }
+.action-buttons button { flex:1; padding:12px; border:none; border-radius:10px; font-size:16px; font-weight: bold; cursor:pointer; }
+#pdfBtn { background:#0b6b3a; color:#fff; }
+#resetBtn { background:#f59e0b; color:#fff; }
+.footer-credit { text-align: center; margin-top: 40px; padding: 20px; color: #8B0000; font-weight: bold; font-size: 16px; letter-spacing: 1px; }
+
+/* સેટિંગ્સ બટન */
+.change-btn { background: #e2e8f0; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<div id="attendance-content">
+  <div class="header-section">
+    <h2 id="display-school-name">📋 વિદ્યાર્થી હાજરી બોર્ડ</h2>
+    <div id="display-class-info" style="font-size: 18px; color: #4a5568; margin-bottom: 5px;"></div>
+    <div id="todayDate" style="font-weight: bold; color: #718096;"></div>
+    <button id="changeSettings" class="change-btn" style="display:none;">⚙️ સેટિંગ્સ / નવી ફાઇલ અપલોડ કરો</button>
+  </div>
+
+  <div class="setup-container" id="uploadArea">
+    <a href="#" class="btn-sample" onclick="downloadSample()">📥 Sample Excel ડાઉનલોડ કરો</a>
+    <div style="margin: 15px 0; text-align: left; padding: 0 20px;">
+        <label><b>શાળાનું નામ:</b></label>
+        <input type="text" id="schoolName" class="input-field" placeholder="દા.ત. પ્રાથમિક શાળા રધવાણજ">
+        <label><b>ધોરણ અને વર્ગ:</b></label>
+        <div style="display: flex; gap: 10px;">
+            <input type="text" id="grade" class="input-field" placeholder="ધોરણ">
+            <input type="text" id="section" class="input-field" placeholder="વર્ગ">
+        </div>
+    </div>
+    <label class="file-input-label">📁 એક્સેલ ફાઇલ પસંદ કરો
+        <input type="file" id="excelFile" accept=".xlsx, .xls" style="display:none;">
+    </label>
+  </div>
+
+  <div id="card-container"></div>
+  <div id="summary-box">
+    <div style="color: #2ecc71;">✅ હાજર: <span id="presentCount">0</span></div>
+    <div style="color: #e74c3c;">❌ ગેરહાજર: <span id="absentCount">0</span></div>
+  </div>
+  <div id="lists-section">
+    <h3 style="color: #2ecc71;">✅ હાજર વિદ્યાર્થીઓ</h3><ul id="presentList"></ul>
+    <hr style="border: 0.5px solid #eee; margin: 15px 0;">
+    <h3 style="color: #e74c3c;">❌ ગેરહાજર વિદ્યાર્થીઓ</h3><ul id="absentList"></ul>
+  </div>
+</div>
+
+<div class="action-buttons" id="actionBtns">
+  <button id="clearDailyBtn" style="background:#4a5568; color:white;">🧹 આજની હાજરી સાફ કરો</button>
+  <button id="pdfBtn">📄 PDF રિપોર્ટ</button>
+</div>
+
+<div class="footer-credit">Created by Sandip Prajapati</div>
+
+<script>
+let studentsData = {};
+let finalSchoolName = "";
+let finalClassInfo = "";
+
+const dateStr = new Date().toLocaleDateString("gu-IN", {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+document.getElementById("todayDate").innerText = dateStr;
+
+// ૧. પેજ લોડ થાય ત્યારે ચેક કરો કે જૂનો ડેટા છે કે નહીં
+window.onload = function() {
+    const savedData = localStorage.getItem('attendance_students');
+    const savedSchool = localStorage.getItem('attendance_school');
+    const savedClass = localStorage.getItem('attendance_class');
+
+    if (savedData && savedSchool) {
+        studentsData = JSON.parse(savedData);
+        finalSchoolName = savedSchool;
+        finalClassInfo = savedClass;
+        showAttendanceBoard();
+    }
+};
+
+function showAttendanceBoard() {
+    document.getElementById("display-school-name").innerText = "📋 " + finalSchoolName;
+    document.getElementById("display-class-info").innerText = finalClassInfo;
+    document.getElementById("uploadArea").style.display = "none";
+    document.getElementById("summary-box").style.display = "flex";
+    document.getElementById("lists-section").style.display = "block";
+    document.getElementById("actionBtns").style.display = "flex";
+    document.getElementById("changeSettings").style.display = "inline-block";
+    renderCardsFromData();
+}
+
+function renderCardsFromData() {
+    const container = document.getElementById("card-container");
+    container.innerHTML = "";
+    document.getElementById("absentList").innerHTML = "";
+    document.getElementById("presentList").innerHTML = "";
+
+    for (let name in studentsData) {
+        const wrap = document.createElement("div");
+        wrap.className = "card-wrap";
+        const card = document.createElement("div");
+        card.className = "card";
+        card.id = "card-" + name.replace(/\s+/g, '');
+
+        const front = document.createElement("div");
+        front.className = "face front";
+        front.innerHTML = `<div>${name}</div>
+            <button class="btn-present" onclick="event.stopPropagation(); markAttendance('${name}', true)">હાજર (SMS)</button>
+            <button class="btn-absent" onclick="event.stopPropagation(); markAttendance('${name}', false)">ગેરહાજર (SMS)</button>`;
+
+        const back = document.createElement("div");
+        back.className = "face back";
+        const img = document.createElement("img");
+        const photoId = studentsData[name].photoId;
+        img.src = photoId ? `https://lh3.googleusercontent.com/d/${photoId}` : `https://ui-avatars.com/api/?name=${name}&background=random&color=fff&size=200`;
+        back.appendChild(img);
+
+        card.append(front, back);
+        wrap.appendChild(card);
+        container.appendChild(wrap);
+        
+        const li = document.createElement("li");
+        li.textContent = name;
+        li.id = "li-" + name.replace(/\s+/g, '');
+        document.getElementById("absentList").appendChild(li);
+    }
+    updateCount();
+}
+
+document.getElementById('excelFile').addEventListener('change', function(e) {
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+        const workbook = XLSX.read(evt.target.result, { type: 'binary' });
+        const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+        if(json.length > 0) {
+            finalSchoolName = document.getElementById("schoolName").value || "વિદ્યાર્થી હાજરી બોર્ડ";
+            finalClassInfo = `ધોરણ: ${document.getElementById("grade").value} | વર્ગ: ${document.getElementById("section").value}`;
+            
+            studentsData = {};
+            json.forEach(item => {
+                const name = item.Name || item.નામ;
+                studentsData[name] = { mobile: item.Mobile || item.મોબાઈલ, photoId: item.PhotoID || "" };
+            });
+
+            // LocalStorage માં સેવ કરો
+            localStorage.setItem('attendance_students', JSON.stringify(studentsData));
+            localStorage.setItem('attendance_school', finalSchoolName);
+            localStorage.setItem('attendance_class', finalClassInfo);
+            
+            showAttendanceBoard();
+        }
+    };
+    reader.readAsBinaryString(e.target.files[0]);
+});
+
+function markAttendance(name, isPresent) {
+    const card = document.getElementById("card-" + name.replace(/\s+/g, ''));
+    const liId = "li-" + name.replace(/\s+/g, '');
+    const li = document.getElementById(liId);
+    if(li) li.remove();
+
+    const newLi = document.createElement("li");
+    newLi.id = liId;
+    newLi.textContent = name;
+
+    if(isPresent) {
+        document.getElementById("presentList").appendChild(newLi);
+        card.classList.add("flip");
+    } else {
+        document.getElementById("absentList").appendChild(newLi);
+        card.classList.remove("flip");
+    }
+    updateCount();
+    
+    const msg = isPresent ? `નમસ્તે 🙏, ${finalSchoolName} તરફથી જાણ કરવામાં આવે છે કે આપનું બાળક ${name} આજે હાજર છે.` : `નમસ્તે 🙏, ${finalSchoolName} તરફથી જાણ કરવામાં આવે છે કે આપનું બાળક ${name} આજે ગેરહાજર છે.`;
+    if(studentsData[name].mobile) window.open(`sms:+91${studentsData[name].mobile}?body=${encodeURIComponent(msg)}`, '_blank');
+}
+
+function updateCount() {
+    document.getElementById("presentCount").innerText = document.getElementById("presentList").children.length;
+    document.getElementById("absentCount").innerText = document.getElementById("absentList").children.length;
+}
+
+document.getElementById("clearDailyBtn").onclick = () => {
+    if(confirm("શું તમે આજની હાજરી સાફ કરી ફરીથી શરૂ કરવા માંગો છો?")) renderCardsFromData();
+};
+
+document.getElementById("changeSettings").onclick = () => {
+    if(confirm("સેટિંગ્સ બદલવા માટે ઓકે આપો. (નોંધ: જૂનો ડેટા ભૂંસાઈ જશે નહીં, પણ નવો સેટઅપ કરવા દેશે)")) {
+        document.getElementById("uploadArea").style.display = "block";
+        document.getElementById("actionBtns").style.display = "none";
+        document.getElementById("card-container").innerHTML = "";
+    }
+};
+
+document.getElementById("pdfBtn").onclick = () => {
+    html2pdf().from(document.getElementById('attendance-content')).save(`${finalSchoolName}_Report.pdf`);
+};
+
+function downloadSample() {
+    const data = [["Name", "Mobile", "PhotoID"], ["વિદ્યાર્થી ૧", "9900000001", ""]];
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Students");
+    XLSX.writeFile(wb, "Sample.xlsx");
+}
+</script>
+</body>
+</html>
